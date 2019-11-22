@@ -1,7 +1,10 @@
+import sys
 import requests
 from bs4 import BeautifulSoup, Tag
+from datetime import datetime
 
-class BCAParses:
+
+class BCAScrape:
     username = None
     password = None
     url = {
@@ -73,6 +76,62 @@ class BCAParses:
                     rekList.append(rek)
                     rek = []
         return rekList
+
+    def getMutasiRek(self, startDt, endDt, indexRek="0"):
+        date_format = "%d/%m/%Y"
+        a = datetime.strptime(startDt, date_format)
+        b = datetime.strptime(endDt, date_format)
+        if ((a > b) or ((b - a).days > 7) or ((datetime.today() - a).days > 31)):
+            print("ERROR!! Please check your input, and make sure \n\nStart date cant be greater than End date \nStatement information is only available for max the past 31 days. \nPeriod statement can be selected within 7 days.")
+            self.logout()
+            sys.exit(1)
+        else:
+            startDt = startDt.split("/")
+            endDt = endDt.split("/")
+            self.s.headers.update(
+                {'Referer': 'https://m.klikbca.com/accountstmt.do?value(actions)=menu'})
+            self.s.post(
+                'https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt')
+            self.s.headers.update(
+                {'Referer': 'https://m.klikbca.com/accountstmt.do?value(actions)=acct_stmt'})
+            data = {
+                'r1': '1',
+                'value(D1)': str(indexRek),  # index rekening default 0
+                'value(startDt)': startDt[0],
+                'value(startMt)': startDt[1],
+                'value(startYr)': startDt[2],
+                'value(endDt)': endDt[0],
+                'value(endMt)': endDt[1],
+                'value(endYr)': endDt[2]
+            }
+            r = self.s.post(
+                'https://m.klikbca.com/accountstmt.do?value(actions)=acctstmtview', data=data)
+            # parse and scrape data
+            soup = BeautifulSoup(r.text, "lxml")
+            mutasiData = []
+            listTransaksi = []
+            mutasiTbl: Tag = soup.find_all('table')[0].find_all(
+                'table')[1].find_all('table')[1].find_all('tr')
+            for i in range(1, 5):
+                if i == 2:
+                    continue
+                mutasiData.append(soup.find_all('table')[0].find_all('table')[1].find_all(
+                    'table')[0].find_all('tr')[i].find_all('td')[2].text)
+
+            for i in range(1, (len(mutasiTbl))):
+                trx = soup.find_all('table')[0].find_all('table')[1].find_all('table')[
+                    1].find_all('tr')[i].get_text(separator="||").split("||")
+                if i == (len(mutasiTbl)-1):
+                    del trx[-2:]
+                else:
+                    del trx[-1]
+                listTransaksi.append(trx)
+            mutasiData.append(listTransaksi)
+
+            for i in range(3, 13, 3):
+                mutasiData.append(soup.find_all('table')[0].find_all('table')[
+                                  1].find_all('table')[2].find_all('td')[i].text)
+            return mutasiData
 
     def logout(self):
         self.s.get(
