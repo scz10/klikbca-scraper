@@ -77,15 +77,23 @@ class BCAScrape:
                     rek = []
         return rekList
 
-    def getMutasiRek(self, startDt, endDt, indexRek="0"):
-        date_format = "%d/%m/%Y"
-        a = datetime.strptime(startDt, date_format)
-        b = datetime.strptime(endDt, date_format)
-        if ((a > b) or ((b - a).days > 7) or ((datetime.today() - a).days > 31)):
-            print("ERROR!! Please check your input, and make sure \n\nStart date cant be greater than End date \nStatement information is only available for max the past 31 days. \nPeriod statement can be selected within 7 days.")
-            self.logout()
-            sys.exit(1)
-        else:
+    def getMutasiRek(self, startDt, endDt, flow=None, mode=None , indexRek="0"):
+        try:
+            date_format = "%d/%m/%Y"
+            a = datetime.strptime(startDt, date_format)
+            b = datetime.strptime(endDt, date_format)
+            if ((a > b) or ((b - a).days > 7) or ((datetime.today() - a).days > 31)):
+                print("ERROR!! Please check your input, and make sure \n\nStart date cant be greater than End date \nStatement information is only available for max the past 31 days. \nPeriod statement can be selected within 7 days.")
+                self.logout()
+                sys.exit(1)
+            if (int(mode) != 1 and mode != None):
+                print("Please input Mode option with 1 for Simple Mode, or leave it blank(None) for full mode")
+                self.logout()
+                sys.exit(1)
+            if (str(flow).upper() != "CR" and str(flow).upper() != "DB" and flow != None):
+                print("Please input Flow option with 'CR', 'DB' or leave it blank(None) to get both flow")
+                self.logout()
+                sys.exit(1)
             startDt = startDt.split("/")
             endDt = endDt.split("/")
             self.s.headers.update(
@@ -112,27 +120,43 @@ class BCAScrape:
             listTransaksi = []
             mutasiTbl: Tag = soup.find_all('table')[0].find_all(
                 'table')[1].find_all('table')[1].find_all('tr')
+
             for i in range(1, 5):
                 if i == 2:
                     continue
                 mutasiData.append(soup.find_all('table')[0].find_all('table')[1].find_all(
-                    'table')[0].find_all('tr')[i].find_all('td')[2].text)
+                'table')[0].find_all('tr')[i].find_all('td')[2].text)
 
-            for i in range(1, (len(mutasiTbl))):
-                trx = soup.find_all('table')[0].find_all('table')[1].find_all('table')[
-                    1].find_all('tr')[i].get_text(separator="||").split("||")
+            for i in range(1,(len(mutasiTbl))):
+                trx = soup.find_all('table')[0].find_all('table')[1].find_all('table')[1].find_all('tr')[i].get_text(separator="||").split("||")
                 if i == (len(mutasiTbl)-1):
                     del trx[-2:]
                 else:
                     del trx[-1]
-                listTransaksi.append(trx)
+                if mode == 1:
+                    for i in range(1,len(trx)-3):
+                        del trx[2]     
+                if flow:
+                    if trx[-1] == str(flow.upper()):
+                        listTransaksi.append(trx)
+                else:
+                    listTransaksi.append(trx)
             mutasiData.append(listTransaksi)
 
             for i in range(3, 13, 3):
                 mutasiData.append(soup.find_all('table')[0].find_all('table')[
-                                  1].find_all('table')[2].find_all('td')[i].text)
-            return mutasiData
+                              1].find_all('table')[2].find_all('td')[i].text)
 
+            if mode == 1:
+                return listTransaksi
+            else:
+                return mutasiData
+
+        except ValueError as exc:
+            print(exc)
+            self.logout()
+            sys.exit(1)
+    
     def logout(self):
         self.s.get(
             'https://m.klikbca.com/authentication.do?value(actions)=logout')
