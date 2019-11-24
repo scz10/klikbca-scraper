@@ -1,5 +1,5 @@
 # klikbca-scraper
-python class for scraping klikbca
+Python class for scraping klikbca (mobile version)
 
 ## How to install
 **package used : requests, beautifulsoup4, lxml <br>**
@@ -12,6 +12,8 @@ Install require package :
 ## How to use
 ### ***Login***
 Use username and password your klikbca account
+
+    from bca import BCAScrape
 
     obj = BCAScrape('USERNAME','PASSWORD')
     obj.login()
@@ -48,81 +50,166 @@ with specification
 
 2. Account statement information Period statement can be selected within 7 days.
 
-`getMutasiRek(startDt, endDt, indexRek="0")`
+<br>
+
+`getMutasiRek(startDt, endDt, flow=None, mode=None, indexRek="0")`
+
+
+<br>
+
+    startDt (str), Start statement date "%d/%m/%Y". e.g: "18/10/2019"
+
+    endDt (str), End statement date "%d/%m/%Y". e.g: "18/10/2019"
+
+    flow (str), To filter transaction data result by cash flow. e.g: Filter by credit use "CR" or debit use "DB", all use None the default is None
+
+    mode (int), To change format result data, e.g: Use 1 to get result data only for transaction , or None to get all data including starting balance and final balance, the default is None
+
+    indexRek (str), To select another account number in your account, if you have only 1 account number, please dont change this 
 
 Note : before call ***getMutasiRek*** function, make sure to ***login*** first.
 
-Example : 
+---
+***Example :*** 
 
-Let say you want get account mutation 
+Let say you want get account statement 
 
-from ***13 November 2019*** to ***16 November 2019***
+from ***18 November 2019*** to ***21 November 2019***
 
 then you can call this function like this
 
-    mutasi = obj.getMutasiRek("13/11/2019","16/11/2019") 
+    statement = obj.getMutasiRek("18/11/2019","21/11/2019") 
 
-Output array will be like this
+Statement output will be like this
 
     [
-        "7410XXXXXX",                   # your account number
-        "13/11/2019 - 18/11/2019",      # statement period
+        "7410XXXXXX",                   # account number
+        "18/10/2019 - 21/10/2019",      # statement period
         "IDR",                          # currency
         [
             [
-                "13/11",                # transaction date
-                "TRSF E-BANKING DB ",   # transfer method  
-                "1311/FTFVA/XXXXXXX",   
-                "70001/GO-PAY CUSTO",   # VA / bank 
-                "-                 ",
-                "-                 ",
-                "081288XXXXXX",         # account number
-                "0000",                 # branch code (?)
-                "51,000.00",            # nominal
-                "DB"                    # flow
+                "18/10",                # transaction date
+                "SWITCHING CR      ",   # transaction type from other bank using "SWTICHING"
+                "TRANSFER   DR 013 ",   # from bank code 013
+                "XXXX NAME",            # sender name
+                "XXX LOCATION",         # transfer location 
+                "0998",                 # branch code (?)
+                "106,819.00",           # nominal transaction
+                "CR"                    # cash flow
             ],
             [
-                "13/11",
-                "TRSF E-BANKING DB ",
-                "1311/FTFVA/XXXXXXX",
-                "12208/SHOPEEPAY   ",
-                "-                 ",
-                "-                 ",
-                "1288XXXXXX",
-                "0000",
-                "10,000.00",
+                "18/10",
+                "SWITCHING DB      ",
+                "TRANSFER   KE 009 ",
+                "XXXX NAME",
+                "XXX LOCATION",
+                "0998",
+                "358,819.00",
                 "DB"
             ],
             [
-                "15/11",
-                "BIAYA ADM         ",    #adm fee from bank
+                "18/10",
+                "BIAYA ADM         ", # admin fee from bank
                 "0000",
                 "17,000.00",
                 "DB"
             ],
             [
-                "18/11",
-                "TRSF E-BANKING DB ",
-                "1711/FTFVA/XXXXXX",
-                "39358/OVO         ",
+                "21/10",
+                "TRSF E-BANKING DB ",   # "TSRF E-BANKING" mean it come from same bank transaction
+                "2110/FTFVA/WS95031",   # description
+                "12208/SHOPEEPAY   ",   # destination account
                 "-                 ",
                 "-                 ",
-                "08XXXXXXXX",
+                "128XXXXXXX",           
                 "0000",
-                "200,000.00",
+                "26,000.00",
                 "DB"
+            ],
+            [
+                "21/10",
+                "TRSF E-BANKING CR ",
+                "21/10 95031",
+                "XXX NAME SENDER",
+                "0998",
+                "72,115.00",
+                "CR"
             ]
         ],
-        "1,126,XXX.XX",    # starting balance period based
-        "0.00",            # total credit statement
-        "278,000.00",      # total debit statement
-        "848,XXX.XX"       # final balance period based
+        "764,952.00",   # starting balance period based
+        "178.934.00",   # total credit statement
+        "375,819.00",   # total debit statement
+        "568,067.00"    # final balance period based
     ]
-    
+
+
 To access the output you can access the array like this
 
     mutasi[0]       # to get account number
     mutasi[3][0]    # to get first transaction data
+
+---
+
+***Example 2 :*** 
+
+you can also filter the transaction data by cash flow and format it with only transaction data to result by using option ***flow*** and ***mode***
+
+    statement = obj.getMutasiRek("18/11/2019","21/11/2019",flow="CR",mode=1)
+
+And the output will be like this
+
+    [
+        [
+            "18/10",
+            "SWITCHING CR      ",
+            "106,819.00",
+            "CR"
+        ],
+        [
+            "21/10",
+            "TRSF E-BANKING CR ",
+            "72,115.00",
+            "CR"
+        ]
+    ]
+
+---
+
+### ***Check if transaction exist by nominal transfer***
+
+`isTransactionExist(nominal,startDt=None, endDt=None)`
+
+<br>
+Use this function to check are the transaction exist based on Nominal transfer,  it will check only for transaction type
+
+***"TRSF E-BANKING CR"*** or ***"SWITCHING CR"***
+
+That mean it will check incoming transfer between account (same bank) or between bank only
+
+    nominal (int), transfer nominal to be check. e.g: 102132 // 102.132
+
+    startDt (optional) (str), Start date based check transfer using format "%d/%m/%Y". e.g: "18/11/2019" // 18 November 2019
+
+    endDt (optional) (str), End date based check transfer using format "%d/%m/%Y". e.g: "20/11/2019" // 20 November 2019
+
+    by default if you dont fill the startDt and endDt
+    the startDt will be yesterday and
+    the endDt will be today
+
+***Example :***
+
+Lets say you want to check is there transaction with transfer nominal ***372.219*** from **yesterday** to **today**
+
+    exist = obj.isTransactionExist(372219)
+
+Or if you want specify the date from **15 Nov 19** to **20 Nov 2019**
+
+    exist = obj.isTransactionExist(372219,"15/11/2019","20/11/2019")
+
+It will return **True** if exist
+
+or **False** if not exist
+
 ---
 ### ***Logout***
 This function to logout your account from the session.<br>
@@ -130,7 +217,3 @@ you need to ***logout*** everytime you want to exit the code<br>
 or it will make you cant login for 10 minutes
 
     obj.logout()
-
----
-## Next update
-- Check incoming transfer by transfer value / notes

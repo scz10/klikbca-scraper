@@ -1,7 +1,7 @@
 import sys
 import requests
 from bs4 import BeautifulSoup, Tag
-from datetime import datetime
+from datetime import datetime,timedelta
 
 
 class BCAScrape:
@@ -157,6 +157,30 @@ class BCAScrape:
             self.logout()
             sys.exit(1)
     
+    def isTransactionExist(self,nominal,startDt=None, endDt=None):
+        try:
+            nominal = '{:20,.2f}'.format(int(nominal))
+            if (startDt == None and endDt == None):
+                startDt = datetime.strftime(datetime.now() - timedelta(1), "%d/%m/%Y")
+                endDt = datetime.strftime(datetime.now(), "%d/%m/%Y")
+
+            isExist = self.getMutasiRek(startDt,endDt,flow="CR",mode=1)
+
+            for i in range(len(isExist)):
+                if (isExist[i][2].strip() == nominal.strip()) and (isExist[i][1].strip() == "SWITCHING CR" or isExist[i][1].strip() == "TRSF E-BANKING CR"):
+                    return True
+
+            return False
+
+        except ValueError as exc:
+            print(exc)
+            self.logout()
+            sys.exit(1)
+        except TypeError as exc:
+            print(exc)
+            self.logout()
+            sys.exit(1)
+
     def logout(self):
         self.s.get(
             'https://m.klikbca.com/authentication.do?value(actions)=logout')
