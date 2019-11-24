@@ -43,7 +43,7 @@ To access your ***first*** account number you can access the array like this
     acct[0][0]
 
 ---
-### ***Get account mutation***
+### ***Get account statement***
 Use this function to get list transaction based on period of time
 with specification
 1. Account statement information is only available for the past 31 days
@@ -84,7 +84,7 @@ Statement output will be like this
 
     [
         "7410XXXXXX",                   # account number
-        "18/10/2019 - 21/10/2019",      # statement period
+        "18/11/2019 - 21/11/2019",      # statement period
         "IDR",                          # currency
         [
             [
@@ -116,7 +116,7 @@ Statement output will be like this
             ],
             [
                 "21/10",
-                "TRSF E-BANKING DB ",   # "TSRF E-BANKING" mean it come from same bank transaction
+                "TRSF E-BANKING DB ",   # "TRSF E-BANKING" mean it come from same bank transaction
                 "2110/FTFVA/WS95031",   # description
                 "12208/SHOPEEPAY   ",   # destination account
                 "-                 ",
