@@ -7,13 +7,14 @@ from datetime import datetime,timedelta
 class BCAScrape:
     username = None
     password = None
+    ipAddress = None
+    statusLogin = False
     url = {
         "loginUrl": "https://m.klikbca.com/login.jsp",
         "loginAction": "https://m.klikbca.com/authentication.do",
         "logoutAction": "https://m.klikbca.com/authentication.do?value(actions)=logout",
         "cekSaldoUrl": "https://m.klikbca.com/balanceinquiry.do"
     }
-    ipAddress = None
     headers = {
         'Connection': 'keep-alive',
         'Cache-Control': 'max-age=0',
@@ -56,8 +57,8 @@ class BCAScrape:
         self.data['value(user_ip)'] = self.ipAddress
         self.data['user_ip'] = self.ipAddress
         self.s = requests.Session()
-        self.s.post(url=self.url["loginAction"],
-                    headers=self.headers, data=self.data)
+        self.s.post(url=self.url["loginAction"], headers=self.headers, data=self.data)
+        self.statusLogin = True
 
     def getSaldo(self):
         self.s.headers.update({'Referer': self.url["loginAction"]})
@@ -65,6 +66,10 @@ class BCAScrape:
         self.s.headers.update(
             {'Referer': 'https://m.klikbca.com/accountstmt.do?value(actions)=menu'})
         r = self.s.post(self.url["cekSaldoUrl"])
+        if r.status_code == 302:
+            self.logout()
+            print("Please login first, or check your username or password \n SystemExit(1)")
+            sys.exit(1)
         soup = BeautifulSoup(r.text, "html.parser")
         rekList = []
         rek = []
@@ -114,6 +119,10 @@ class BCAScrape:
             }
             r = self.s.post(
                 'https://m.klikbca.com/accountstmt.do?value(actions)=acctstmtview', data=data)
+            if r.status_code == 302:
+                self.logout()
+                print("Please login first, or check your username or password \n SystemExit(1)")
+                sys.exit(1)
             # parse and scrape data
             soup = BeautifulSoup(r.text, "lxml")
             mutasiData = []
@@ -184,3 +193,4 @@ class BCAScrape:
     def logout(self):
         self.s.get(
             'https://m.klikbca.com/authentication.do?value(actions)=logout')
+        self.statusLogin = False
