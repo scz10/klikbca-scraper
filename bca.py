@@ -143,8 +143,12 @@ class BCAScrape:
                 else:
                     del trx[-1]
                 if mode == 1:
-                    for i in range(1,len(trx)-3):
-                        del trx[2]     
+                    for i in range(1,len(trx)-4):
+                        if i == 1:
+                            del trx[2]
+                        else:
+                            del trx[3]
+                             
                 if flow:
                     if trx[-1] == str(flow.upper()):
                         listTransaksi.append(trx)

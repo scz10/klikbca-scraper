@@ -162,12 +162,14 @@ And the output will be like this
         [
             "18/10",
             "SWITCHING CR      ",
+            "XXXX NAME SENDER",
             "106,819.00",
             "CR"
         ],
         [
             "21/10",
             "TRSF E-BANKING CR ",
+            "XXX NAME SENDER"
             "72,115.00",
             "CR"
         ]
