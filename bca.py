@@ -172,24 +172,24 @@ class BCAScrape:
     
     def isTransactionExist(self,nominal,startDt=None, endDt=None):
         try:
+            trx_data = []
             nominal = '{:20,.2f}'.format(int(nominal))
             if (startDt == None and endDt == None):
-                startDt = datetime.strftime(datetime.now() - timedelta(1), "%d/%m/%Y")
+                startDt = datetime.strftime(datetime.now(), "%d/%m/%Y")
                 endDt = datetime.strftime(datetime.now(), "%d/%m/%Y")
 
             isExist = self.getMutasiRek(startDt,endDt,flow="CR",mode=1)
 
             for i in range(len(isExist)):
-                if (isExist[i][2].strip() == nominal.strip()) and (isExist[i][1].strip() == "SWITCHING CR" or isExist[i][1].strip() == "TRSF E-BANKING CR"):
-                    return True
+                if (isExist[i][3].strip() == nominal.strip()) and (isExist[i][1].strip() == "SWITCHING CR" or isExist[i][1].strip() == "TRSF E-BANKING CR"):
+                    trx_data.append(isExist[i])
+            
+            if len(trx_data) > 0:
+                return True,trx_data
+            else:
+                return False,trx_data
 
-            return False
-
-        except ValueError as exc:
-            print(exc)
-            self.logout()
-            sys.exit(1)
-        except TypeError as exc:
+        except (ValueError,TypeError) as exc:
             print(exc)
             self.logout()
             sys.exit(1)

@@ -88,7 +88,7 @@ Statement output will be like this
         "IDR",                          # currency
         [
             [
-                "18/10",                # transaction date
+                "18/11",                # transaction date
                 "SWITCHING CR      ",   # transaction type from other bank using "SWTICHING"
                 "TRANSFER   DR 013 ",   # from bank code 013
                 "XXXX NAME",            # sender name
@@ -98,7 +98,7 @@ Statement output will be like this
                 "CR"                    # cash flow
             ],
             [
-                "18/10",
+                "18/11",
                 "SWITCHING DB      ",
                 "TRANSFER   KE 009 ",
                 "XXXX NAME",
@@ -108,14 +108,14 @@ Statement output will be like this
                 "DB"
             ],
             [
-                "18/10",
+                "18/11",
                 "BIAYA ADM         ", # admin fee from bank
                 "0000",
                 "17,000.00",
                 "DB"
             ],
             [
-                "21/10",
+                "21/11",
                 "TRSF E-BANKING DB ",   # "TRSF E-BANKING" mean it come from same bank transaction
                 "2110/FTFVA/WS95031",   # description
                 "12208/SHOPEEPAY   ",   # destination account
@@ -127,7 +127,7 @@ Statement output will be like this
                 "DB"
             ],
             [
-                "21/10",
+                "21/11",
                 "TRSF E-BANKING CR ",
                 "21/10 95031",
                 "XXX NAME SENDER",
@@ -160,14 +160,14 @@ And the output will be like this
 
     [
         [
-            "18/10",
+            "18/11",
             "SWITCHING CR      ",
             "XXXX NAME SENDER",
             "106,819.00",
             "CR"
         ],
         [
-            "21/10",
+            "21/11",
             "TRSF E-BANKING CR ",
             "XXX NAME SENDER"
             "72,115.00",
@@ -177,12 +177,12 @@ And the output will be like this
 
 ---
 
-### ***Check if transaction exist by nominal transfer***
+### ***Check if transaction exist based on transfer amount***
 
 `isTransactionExist(nominal,startDt=None, endDt=None)`
 
 <br>
-Use this function to check are the transaction exist based on Nominal transfer,  it will check only for transaction type
+Use this function to check are the transaction exist based on transfer amount,  it will check only for transaction type
 
 ***"TRSF E-BANKING CR"*** or ***"SWITCHING CR"***
 
@@ -195,22 +195,36 @@ That mean it will check incoming transfer between account (same bank) or between
     endDt (optional) (str), End date based check transfer using format "%d/%m/%Y". e.g: "20/11/2019" // 20 November 2019
 
     by default if you dont fill the startDt and endDt
-    the startDt will be yesterday and
-    the endDt will be today
+    the startDt and endDt will be today
 
 ***Example :***
 
-Lets say you want to check is there transaction with transfer nominal ***372.219*** from **yesterday** to **today**
+Lets say you want to check is there any transaction with transfer amount ***72.115 Rupiah*** from today transaction
 
-    exist = obj.isTransactionExist(372219)
+    exist,data = obj.isTransactionExist(72115)
 
-Or if you want specify the date from **15 Nov 19** to **20 Nov 2019**
+Or if you want specify the date from **18 Oct 2019** to **20 Oct 2019**
 
-    exist = obj.isTransactionExist(372219,"15/11/2019","20/11/2019")
+    exist,data = obj.isTransactionExist(72115,"18/10/2019","21/10/2019")
 
-It will return **True** if exist
+It will return tuple
 
-or **False** if not exist
+From example above the ***exist*** will return **True** if transaction data exist 
+or **False** if transaction data not exist
+
+And ***data*** will return as list fill with transaction data if the transaction exist
+
+data:
+
+    [
+        [
+            "21/10",
+            "TRSF E-BANKING CR ",
+            "XXX NAME SENDER"
+            "72,115.00",
+            "CR"
+        ]
+    ]
 
 ---
 ### ***Logout***
